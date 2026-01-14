@@ -1,0 +1,216 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* OK금융그룹 브랜드 폰트 */
+@font-face {
+  font-family: 'OKFont';
+  src: url('/fonts/OKFont-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'OKFont';
+  src: url('/fonts/OKFont-Medium.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'OKFont';
+  src: url('/fonts/OKFont-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    /* Primary - OK금융그룹 메인 오렌지 (RGB: 245, 80, 0) */
+    --primary: 19 100% 48%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Background & Surface - 화이트/라이트 그레이 */
+    --background: 0 0% 98%;
+    --foreground: 350 9% 31%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 350 9% 31%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 350 9% 31%;
+    
+    /* Secondary - 보조 컬러 (RGB: 85, 71, 74) */
+    --secondary: 350 9% 31%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Muted */
+    --muted: 0 0% 94%;
+    --muted-foreground: 350 5% 45%;
+    
+    /* Accent - 포인트 컬러 (RGB: 255, 170, 0) */
+    --accent: 40 100% 50%;
+    --accent-foreground: 350 9% 20%;
+    
+    /* Status Colors */
+    --success: 145 60% 40%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 40 100% 50%;
+    --warning-foreground: 40 100% 15%;
+    
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    /* Form & Border */
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 19 100% 48%;
+    
+    --radius: 0.5rem;
+    
+    /* Sidebar - 보조 컬러 기반 */
+    --sidebar-background: 350 9% 31%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 19 100% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 350 9% 25%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 350 9% 25%;
+    --sidebar-ring: 19 100% 48%;
+    
+    /* Custom tokens for certification system */
+    --status-pending: 40 100% 50%;
+    --status-approved: 145 60% 40%;
+    --status-rejected: 0 70% 50%;
+    
+    /* Gradient tokens */
+    --gradient-primary: linear-gradient(135deg, hsl(19 100% 48%) 0%, hsl(30 100% 50%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(40 100% 50%) 0%, hsl(45 100% 55%) 100%);
+    --gradient-sidebar: linear-gradient(180deg, hsl(350 9% 31%) 0%, hsl(350 12% 22%) 100%);
+    
+    /* Shadow tokens */
+    --shadow-sm: 0 1px 2px 0 hsl(350 9% 31% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(350 9% 31% / 0.1), 0 2px 4px -2px hsl(350 9% 31% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(350 9% 31% / 0.1), 0 4px 6px -4px hsl(350 9% 31% / 0.1);
+    --shadow-card: 0 1px 3px 0 hsl(350 9% 31% / 0.1), 0 1px 2px -1px hsl(350 9% 31% / 0.1);
+  }
+
+  .dark {
+    --primary: 19 100% 55%;
+    --primary-foreground: 0 0% 100%;
+    
+    --background: 350 10% 10%;
+    --foreground: 0 0% 95%;
+    
+    --card: 350 10% 14%;
+    --card-foreground: 0 0% 95%;
+    
+    --popover: 350 10% 14%;
+    --popover-foreground: 0 0% 95%;
+    
+    --secondary: 350 9% 20%;
+    --secondary-foreground: 0 0% 90%;
+    
+    --muted: 350 10% 18%;
+    --muted-foreground: 350 5% 60%;
+    
+    --accent: 40 100% 50%;
+    --accent-foreground: 350 9% 10%;
+    
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 350 10% 22%;
+    --input: 350 10% 22%;
+    --ring: 19 100% 55%;
+    
+    --sidebar-background: 350 12% 8%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 19 100% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 350 10% 15%;
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: 350 10% 15%;
+    --sidebar-ring: 19 100% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: 'OKFont', 'Noto Sans KR', sans-serif;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'OKFont', 'Noto Sans KR', sans-serif;
+    font-weight: 700;
+  }
+}
+
+@layer components {
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+  
+  .gradient-accent {
+    background: var(--gradient-accent);
+  }
+  
+  .gradient-sidebar {
+    background: var(--gradient-sidebar);
+  }
+  
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+  
+  .shadow-elevated {
+    box-shadow: var(--shadow-lg);
+  }
+  
+  /* Status badge styles */
+  .status-pending {
+    @apply bg-warning/15 text-warning border-warning/30;
+  }
+  
+  .status-approved {
+    @apply bg-success/15 text-success border-success/30;
+  }
+  
+  .status-rejected {
+    @apply bg-destructive/15 text-destructive border-destructive/30;
+  }
+
+  /* OK금융그룹 브랜드 버튼 */
+  .btn-ok-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 font-bold;
+  }
+  
+  .btn-ok-accent {
+    @apply bg-accent text-accent-foreground hover:bg-accent/90 font-bold;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .font-ok {
+    font-family: 'OKFont', 'Noto Sans KR', sans-serif;
+  }
+}
