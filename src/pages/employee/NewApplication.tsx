@@ -136,7 +136,13 @@ const [criteriaMap, setCriteriaMap] = useState<{ name: string; organizer: string
     const gradeKeywords = ['associate', 'professional', 'expert', 'advanced', 'foundation', 'practitioner'];
 
     const candidateNames = Array.from(
-      new Set(structuredResult.cert_name_candidates || [])
+      new Set([
+        ...(structuredResult.cert_name_candidates || []),
+        ...structuredResult.pages
+          .filter((p) => p.doc_type === 'certificate')
+          .map((p) => p.certificate_candidates.name || '')
+          .filter(Boolean),
+      ])
     );
 
     const matches: string[] = [];
@@ -412,27 +418,27 @@ const [criteriaMap, setCriteriaMap] = useState<{ name: string; organizer: string
 
     const certPages = structuredResult.pages.filter((p) => p.doc_type === 'certificate');
     const finalCerts =
-      certPages.map((p) => {
-        const pageCandidates = [
-          ...(p.cert_name_candidates || []),
-          p.certificate_candidates.name || '',
-        ].filter(Boolean);
-        const matched = matchedCertNames.find((m) => {
-          const normM = normalize(m);
-          return pageCandidates.some((cand) => {
-            const normC = normalize(cand);
-            return normC === normM || normC.includes(normM) || normM.includes(normC);
+      certPages
+        .map((p) => {
+          const pageCandidates = [
+            ...(p.cert_name_candidates || []),
+            p.certificate_candidates.name || '',
+          ].filter(Boolean);
+          const matched = matchedCertNames.find((m) => {
+            const normM = normalize(m);
+            return pageCandidates.some((cand) => {
+              const normC = normalize(cand);
+              return normC === normM || normC.includes(normM) || normM.includes(normC);
+            });
           });
-        });
-        const finalName = matched || p.certificate_candidates.name || 'N/A';
-        const organizer =
-          (matched && criteriaMap.find((c) => c.name === matched)?.organizer) ||
-          p.certificate_candidates.issuer ||
-          'N/A';
-        const date = p.certificate_candidates.date || 'N/A';
-        return { name: finalName, date, issuer: organizer };
-      }) ||
-      certificatesList;
+          if (!matched) {
+            return null; // 기준표와 일치/유사한 항목만 표시
+          }
+          const organizer = criteriaMap.find((c) => c.name === matched)?.organizer || 'N/A';
+          const date = p.certificate_candidates.date || 'N/A';
+          return { name: matched, date, issuer: organizer };
+        })
+        .filter(Boolean) as { name: string; date: string | null; issuer: string }[];
 
     return (
       <Card className="shadow-card">
