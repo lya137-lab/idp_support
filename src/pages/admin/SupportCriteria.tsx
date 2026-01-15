@@ -511,8 +511,8 @@ export default function SupportCriteriaPage() {
 
   return (
     <AppLayout allowedRoles={['admin', 'system_admin']}>
-      {/* 페이지 기본 세로 스크롤 유지 */}
-      <div className="space-y-6">
+      {/* 페이지 기본 세로 스크롤 유지, 하단 고정 스크롤바 공간 확보 */}
+      <div className="space-y-6 pb-12">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -598,7 +598,15 @@ export default function SupportCriteriaPage() {
             ) : (
               <div className="rounded-lg border">
                 {/* 표 컨테이너: 세로 스크롤 없음, 가로 스크롤을 별도 컨트롤로 분리 */}
-                <div ref={tableScrollRef} className="overflow-x-hidden">
+                <div
+                  ref={tableScrollRef}
+                  className="overflow-x-hidden"
+                  onScroll={() => {
+                    if (tableScrollRef.current && fakeScrollRef.current) {
+                      fakeScrollRef.current.scrollLeft = tableScrollRef.current.scrollLeft;
+                    }
+                  }}
+                >
                   <Table className="min-w-[1400px]">
                     <TableHeader className="bg-background">
                     <TableRow className="bg-muted/50">
@@ -709,7 +717,7 @@ export default function SupportCriteriaPage() {
                 {/* 스티키 가로 스크롤 컨트롤러: viewport 하단에 고정 */}
                 <div
                   ref={fakeScrollRef}
-                  className="fixed left-0 right-0 bottom-0 z-30 bg-background"
+                  className="fixed left-0 right-0 bottom-0 z-40 bg-background border-t"
                   style={{ overflowX: 'auto', scrollbarGutter: 'stable', height: '16px' }}
                   onScroll={() => {
                     if (tableScrollRef.current && fakeScrollRef.current) {
