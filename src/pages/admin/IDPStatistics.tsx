@@ -30,13 +30,22 @@ export default function IDPStatistics() {
   const [supportCriteria, setSupportCriteria] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 다중 선택 필터
+  // 다중 선택 필터 (UI 상태)
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [qualificationFilter, setQualificationFilter] = useState<string[]>([]);
   const [certNameFilter, setCertNameFilter] = useState<string[]>([]);
   const [companyFilter, setCompanyFilter] = useState<string[]>([]);
   const [rankFilter, setRankFilter] = useState<string[]>([]);
   const [monthFilter, setMonthFilter] = useState<string[]>([]);
+
+  // 조회 버튼으로 확정된 필터 상태 (null이면 전체 조회)
+  const [appliedCategoryFilter, setAppliedCategoryFilter] = useState<string[] | null>(null);
+  const [appliedQualificationFilter, setAppliedQualificationFilter] = useState<string[] | null>(null);
+  const [appliedCertNameFilter, setAppliedCertNameFilter] = useState<string[] | null>(null);
+  const [appliedCompanyFilter, setAppliedCompanyFilter] = useState<string[] | null>(null);
+  const [appliedRankFilter, setAppliedRankFilter] = useState<string[] | null>(null);
+  const [appliedMonthFilter, setAppliedMonthFilter] = useState<string[] | null>(null);
+  const [hasApplied, setHasApplied] = useState(false); // 조회 버튼 클릭 여부
 
   // 옵션
   const [categoryOptions, setCategoryOptions] = useState<string[]>([]);
@@ -91,8 +100,8 @@ export default function IDPStatistics() {
     load();
   }, [toast]);
 
-  const matches = (value: string | undefined, selected: string[]) => {
-    if (!selected.length) return true;
+  const matches = (value: string | undefined, selected: string[] | null) => {
+    if (!selected || selected.length === 0) return true;
     return selected.includes(value || '미지정');
   };
 
@@ -106,26 +115,42 @@ export default function IDPStatistics() {
       const rank = '미지정'; // 데이터 부재 시 미지정
       const month = app.createdAt ? app.createdAt.slice(0, 7) : '미지정';
 
-      if (!matches(category, categoryFilter)) return false;
-      if (!matches(qual, qualificationFilter)) return false;
-      if (!matches(certName, certNameFilter)) return false;
-      if (!matches(company, companyFilter)) return false;
-      if (!matches(rank, rankFilter)) return false;
-      if (!matches(month, monthFilter)) return false;
+      if (!matches(category, appliedCategoryFilter)) return false;
+      if (!matches(qual, appliedQualificationFilter)) return false;
+      if (!matches(certName, appliedCertNameFilter)) return false;
+      if (!matches(company, appliedCompanyFilter)) return false;
+      if (!matches(rank, appliedRankFilter)) return false;
+      if (!matches(month, appliedMonthFilter)) return false;
       return true;
     });
-  }, [applications, supportCriteria, categoryFilter, qualificationFilter, certNameFilter, companyFilter, rankFilter, monthFilter]);
+  }, [
+    applications,
+    supportCriteria,
+    appliedCategoryFilter,
+    appliedQualificationFilter,
+    appliedCertNameFilter,
+    appliedCompanyFilter,
+    appliedRankFilter,
+    appliedMonthFilter,
+  ]);
 
   // 그룹핑 기준 결정: 분야 → 자격구분 → 자격증명 → 계열사 → 직급 → 기준월
   const groupingField = useMemo(() => {
-    if (categoryFilter.length) return 'category';
-    if (qualificationFilter.length) return 'qualification';
-    if (certNameFilter.length) return 'certName';
-    if (companyFilter.length) return 'company';
-    if (rankFilter.length) return 'rank';
-    if (monthFilter.length) return 'month';
+    if (appliedCategoryFilter && appliedCategoryFilter.length) return 'category';
+    if (appliedQualificationFilter && appliedQualificationFilter.length) return 'qualification';
+    if (appliedCertNameFilter && appliedCertNameFilter.length) return 'certName';
+    if (appliedCompanyFilter && appliedCompanyFilter.length) return 'company';
+    if (appliedRankFilter && appliedRankFilter.length) return 'rank';
+    if (appliedMonthFilter && appliedMonthFilter.length) return 'month';
     return 'category'; // 기본
-  }, [categoryFilter, qualificationFilter, certNameFilter, companyFilter, rankFilter, monthFilter]);
+  }, [
+    appliedCategoryFilter,
+    appliedQualificationFilter,
+    appliedCertNameFilter,
+    appliedCompanyFilter,
+    appliedRankFilter,
+    appliedMonthFilter,
+  ]);
 
   const grouped = useMemo(() => {
     const rows: Record<
@@ -170,6 +195,25 @@ export default function IDPStatistics() {
     setCompanyFilter([]);
     setRankFilter([]);
     setMonthFilter([]);
+    // 적용 필터도 초기화 → 전체 데이터 조회 상태
+    setAppliedCategoryFilter(null);
+    setAppliedQualificationFilter(null);
+    setAppliedCertNameFilter(null);
+    setAppliedCompanyFilter(null);
+    setAppliedRankFilter(null);
+    setAppliedMonthFilter(null);
+    setHasApplied(false);
+  };
+
+  // 조회 버튼: 현재 선택 필터를 적용(빈 배열도 적용 → 선택 없음으로 간주)
+  const handleApply = () => {
+    setAppliedCategoryFilter([...categoryFilter]);
+    setAppliedQualificationFilter([...qualificationFilter]);
+    setAppliedCertNameFilter([...certNameFilter]);
+    setAppliedCompanyFilter([...companyFilter]);
+    setAppliedRankFilter([...rankFilter]);
+    setAppliedMonthFilter([...monthFilter]);
+    setHasApplied(true);
   };
 
   const MultiSelectDropdown = ({
@@ -307,7 +351,7 @@ export default function IDPStatistics() {
         <Card className="shadow-card">
           <CardHeader>
             <CardTitle className="text-lg">필터</CardTitle>
-            <CardDescription>통계를 확인할 조건을 선택하세요</CardDescription>
+            <CardDescription>조건을 선택하고 조회를 눌러 통계를 확인하세요</CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
@@ -315,43 +359,63 @@ export default function IDPStatistics() {
                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <MultiSelectDropdown
-                  label="분야"
-                  options={categoryOptions}
-                  selected={categoryFilter}
-                  setSelected={setCategoryFilter}
-                />
-                <MultiSelectDropdown
-                  label="자격구분"
-                  options={qualificationOptions}
-                  selected={qualificationFilter}
-                  setSelected={setQualificationFilter}
-                />
-                <MultiSelectDropdown
-                  label="자격증명"
-                  options={certNameOptions}
-                  selected={certNameFilter}
-                  setSelected={setCertNameFilter}
-                />
-                <MultiSelectDropdown
-                  label="계열사"
-                  options={companyOptions}
-                  selected={companyFilter}
-                  setSelected={setCompanyFilter}
-                />
-                <MultiSelectDropdown
-                  label="직급"
-                  options={rankOptions}
-                  selected={rankFilter}
-                  setSelected={setRankFilter}
-                />
-                <MonthPicker
-                  label="기준월(YYYY-MM)"
-                  options={monthOptions}
-                  selected={monthFilter}
-                  setSelected={setMonthFilter}
-                />
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <MultiSelectDropdown
+                    label="분야"
+                    options={categoryOptions}
+                    selected={categoryFilter}
+                    setSelected={setCategoryFilter}
+                  />
+                  <MultiSelectDropdown
+                    label="자격구분"
+                    options={qualificationOptions}
+                    selected={qualificationFilter}
+                    setSelected={setQualificationFilter}
+                  />
+                  <MultiSelectDropdown
+                    label="자격증명"
+                    options={certNameOptions}
+                    selected={certNameFilter}
+                    setSelected={setCertNameFilter}
+                  />
+                  <MultiSelectDropdown
+                    label="계열사"
+                    options={companyOptions}
+                    selected={companyFilter}
+                    setSelected={setCompanyFilter}
+                  />
+                  <MultiSelectDropdown
+                    label="직급"
+                    options={rankOptions}
+                    selected={rankFilter}
+                    setSelected={setRankFilter}
+                  />
+                  <MonthPicker
+                    label="기준월(YYYY-MM)"
+                    options={monthOptions}
+                    selected={monthFilter}
+                    setSelected={setMonthFilter}
+                  />
+                </div>
+
+                <div className="flex flex-wrap gap-2 justify-between items-center">
+                  <div className="text-sm text-muted-foreground">
+                    {hasApplied
+                      ? '선택된 조건으로 조회된 결과입니다.'
+                      : '조건 선택 후 조회를 눌러 통계를 확인하세요.'}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="gap-2" onClick={handleReset}>
+                      <RefreshCw className="h-4 w-4" />
+                      필터 초기화
+                    </Button>
+                    <Button onClick={handleApply} className="gap-2">
+                      <Filter className="h-4 w-4" />
+                      조회
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>
