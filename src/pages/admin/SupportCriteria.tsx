@@ -89,9 +89,33 @@ const defaultFormData: CriteriaFormData = {
 export default function SupportCriteriaPage() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  // 가로 스크롤 동기화를 위한 ref
-  const tableScrollRef = useRef<HTMLDivElement>(null);
-  const fakeScrollRef = useRef<HTMLDivElement>(null);
+  // 가로 스크롤 동기화를 위한 ref/상태
+  const tableViewportRef = useRef<HTMLDivElement>(null);
+  const fakeScrollbarRef = useRef<HTMLDivElement>(null);
+  const isSyncingRef = useRef(false);
+  const [scrollWidth, setScrollWidth] = useState(2000);
+
+  // 가짜 스크롤바 너비를 테이블 scrollWidth에 맞춰 갱신
+  useEffect(() => {
+    const updateWidth = () => {
+      if (tableViewportRef.current) {
+        const nextWidth = tableViewportRef.current.scrollWidth || 2000;
+        setScrollWidth(nextWidth);
+      }
+    };
+    updateWidth();
+
+    // 리사이즈/폰트 로딩 등에 대비해 ResizeObserver 사용
+    const observer = new ResizeObserver(updateWidth);
+    if (tableViewportRef.current) {
+      observer.observe(tableViewportRef.current);
+    }
+    window.addEventListener('resize', updateWidth);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateWidth);
+    };
+  }, []);
   const [criteria, setCriteria] = useState<SupportCriteria[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -597,17 +621,20 @@ export default function SupportCriteriaPage() {
               </div>
             ) : (
               <div className="rounded-lg border">
-                {/* 표 컨테이너: 세로 스크롤 없음, 가로 스크롤을 별도 컨트롤로 분리 */}
+                {/* 표 컨테이너: 세로 스크롤 없음, 가로 이동 대상 */}
                 <div
-                  ref={tableScrollRef}
-                  className="overflow-x-hidden"
+                  ref={tableViewportRef}
+                  className="overflow-x-auto"
                   onScroll={() => {
-                    if (tableScrollRef.current && fakeScrollRef.current) {
-                      fakeScrollRef.current.scrollLeft = tableScrollRef.current.scrollLeft;
+                    if (isSyncingRef.current) return;
+                    if (tableViewportRef.current && fakeScrollbarRef.current) {
+                      isSyncingRef.current = true;
+                      fakeScrollbarRef.current.scrollLeft = tableViewportRef.current.scrollLeft;
+                      isSyncingRef.current = false;
                     }
                   }}
                 >
-                  <Table className="min-w-[1400px]">
+                  <Table className="min-w-[1400px] w-max">
                     <TableHeader className="bg-background">
                     <TableRow className="bg-muted/50">
                       <TableHead className="min-w-[100px]">분야</TableHead>
@@ -714,22 +741,23 @@ export default function SupportCriteriaPage() {
                   </Table>
                 </div>
 
-                {/* 스티키 가로 스크롤 컨트롤러: viewport 하단에 고정 */}
+                {/* 하단 고정 가짜 가로 스크롤바: viewport 기준 */}
                 <div
-                  ref={fakeScrollRef}
+                  ref={fakeScrollbarRef}
                   className="fixed left-0 right-0 bottom-0 z-40 bg-background border-t"
                   style={{ overflowX: 'auto', scrollbarGutter: 'stable', height: '16px' }}
                   onScroll={() => {
-                    if (tableScrollRef.current && fakeScrollRef.current) {
-                      tableScrollRef.current.scrollLeft = fakeScrollRef.current.scrollLeft;
+                    if (isSyncingRef.current) return;
+                    if (tableViewportRef.current && fakeScrollbarRef.current) {
+                      isSyncingRef.current = true;
+                      tableViewportRef.current.scrollLeft = fakeScrollbarRef.current.scrollLeft;
+                      isSyncingRef.current = false;
                     }
                   }}
                 >
                   <div
                     style={{
-                      width: tableScrollRef.current?.scrollWidth
-                        ? `${tableScrollRef.current.scrollWidth}px`
-                        : '2000px',
+                      width: `${scrollWidth}px`,
                       height: '1px',
                     }}
                   />
