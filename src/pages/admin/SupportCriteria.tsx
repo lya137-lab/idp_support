@@ -512,7 +512,7 @@ export default function SupportCriteriaPage() {
   return (
     <AppLayout allowedRoles={['admin', 'system_admin']}>
       {/* 페이지 기본 세로 스크롤 유지, 하단 고정 스크롤바 공간 확보 */}
-      <div className="space-y-6 pb-12">
+      <div className="space-y-6 pb-14">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
