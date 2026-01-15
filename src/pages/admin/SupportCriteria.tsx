@@ -592,8 +592,8 @@ export default function SupportCriteriaPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
-              <div className="rounded-lg border overflow-x-auto">
-                <Table>
+              <div className="rounded-lg border overflow-x-auto pb-2">
+                <Table className="min-w-[1400px]">
                   <TableHeader>
                   <TableRow className="bg-muted/50">
                     <TableHead className="min-w-[100px]">분야</TableHead>

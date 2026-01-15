@@ -39,7 +39,8 @@ import {
   CheckCircle2, 
   XCircle,
   Filter,
-  Download
+  Download,
+  RotateCcw
 } from 'lucide-react';
 import { CertificationApplication, ApplicationStatus } from '@/types';
 
@@ -239,6 +240,27 @@ export default function ApprovalManagement() {
     setRejectDialogOpen(false);
     setRejectingId(null);
     setRejectionReason('');
+  };
+
+  // 승인/반려 취소 → 대기 상태로 되돌리기
+  const handleCancelDecision = (id: string) => {
+    setApplications(prev =>
+      prev.map(app =>
+        app.id === id
+          ? {
+              ...app,
+              status: 'pending' as ApplicationStatus,
+              supportAmount: undefined,
+              rejectionReason: undefined,
+              updatedAt: new Date().toISOString().split('T')[0],
+            }
+          : app
+      )
+    );
+    toast({
+      title: '결정 취소',
+      description: '승인/반려가 취소되어 대기 상태로 돌아갔습니다.',
+    });
   };
 
   return (
@@ -491,7 +513,7 @@ export default function ApprovalManagement() {
                           >
                             <Eye className="h-4 w-4" />
                           </Button>
-                          {app.status === 'pending' && (
+                          {app.status === 'pending' ? (
                             <>
                               <Button 
                                 variant="ghost" 
@@ -510,6 +532,16 @@ export default function ApprovalManagement() {
                                 <XCircle className="h-4 w-4" />
                               </Button>
                             </>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-muted-foreground hover:text-primary"
+                              onClick={() => handleCancelDecision(app.id)}
+                              title="승인/반려 취소"
+                            >
+                              <RotateCcw className="h-4 w-4" />
+                            </Button>
                           )}
                         </div>
                       </TableCell>
