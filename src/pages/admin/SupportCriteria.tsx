@@ -508,7 +508,8 @@ export default function SupportCriteriaPage() {
 
   return (
     <AppLayout allowedRoles={['admin', 'system_admin']}>
-      <div className="space-y-6">
+      {/* 전체 페이지 스크롤을 막고, 내부 스크롤 영역만 사용 */}
+      <div className="flex flex-col gap-6 h-[calc(100vh-80px)] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -592,16 +593,17 @@ export default function SupportCriteriaPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
-              <div className="rounded-lg border">
-                {/* 목록표 영역만 독립 스크롤(페이지 전체 스크롤 차단) */}
+              <div className="rounded-lg border flex flex-col h-[calc(100vh-220px)]">
+                {/* 가로 스크롤 래퍼: 항상 하단에 노출 */}
                 <div
                   className="overflow-x-auto"
                   style={{ scrollbarGutter: 'stable' }}
                 >
+                  {/* 세로 스크롤 래퍼: 목록표 영역만 세로 스크롤 */}
                   <div
-                    className="overflow-y-scroll"
+                    className="overflow-y-auto"
                     style={{
-                      maxHeight: 'calc(100vh - 260px)', // 화면 높이에 따라 자동 조정
+                      maxHeight: 'calc(100vh - 260px)',
                       scrollbarGutter: 'stable',
                     }}
                   >
