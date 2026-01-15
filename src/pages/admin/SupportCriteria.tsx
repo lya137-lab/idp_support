@@ -709,8 +709,8 @@ export default function SupportCriteriaPage() {
                 {/* 스티키 가로 스크롤 컨트롤러: viewport 하단에 고정 */}
                 <div
                   ref={fakeScrollRef}
-                  className="sticky bottom-0 bg-background"
-                  style={{ overflowX: 'auto', scrollbarGutter: 'stable', height: '14px' }}
+                  className="fixed left-0 right-0 bottom-0 z-30 bg-background"
+                  style={{ overflowX: 'auto', scrollbarGutter: 'stable', height: '16px' }}
                   onScroll={() => {
                     if (tableScrollRef.current && fakeScrollRef.current) {
                       tableScrollRef.current.scrollLeft = fakeScrollRef.current.scrollLeft;
