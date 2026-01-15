@@ -592,112 +592,126 @@ export default function SupportCriteriaPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
-              <div className="rounded-lg border overflow-x-auto pb-2">
-                <Table className="min-w-[1400px]">
-                  <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="min-w-[100px]">분야</TableHead>
-                    <TableHead className="min-w-[120px]">자격구분</TableHead>
-                    <TableHead className="min-w-[180px]">자격증명</TableHead>
-                    <TableHead className="min-w-[150px]">주관</TableHead>
-                    <TableHead className="min-w-[200px]">지원기준</TableHead>
-                    <TableHead className="text-right min-w-[100px]">응시료(원)</TableHead>
-                    <TableHead className="text-right min-w-[110px]">응시료(달러)</TableHead>
-                    <TableHead className="text-right min-w-[100px]">교육비(원)</TableHead>
-                    <TableHead className="min-w-[120px]">지원대상</TableHead>
-                    <TableHead className="min-w-[110px]">적용시작일</TableHead>
-                    <TableHead className="min-w-[110px]">적용종료일</TableHead>
-                    <TableHead className="text-center min-w-[80px]">활성</TableHead>
-                    <TableHead className="text-right min-w-[100px]">관리</TableHead>
-                  </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredCriteria.map((item) => (
-                    <TableRow key={item.id} className={!item.isActive ? 'opacity-50' : ''}>
-                      <TableCell className="py-3">
-                        {item.category ? (
-                          <span className="px-3 py-1.5 rounded-full text-sm font-medium bg-primary/10 text-primary whitespace-nowrap">
-                            {item.category}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="py-3">
-                        <span className="px-2 py-1 rounded-full text-xs bg-secondary text-secondary-foreground whitespace-nowrap">
-                          {item.qualificationCategory}
-                        </span>
-                      </TableCell>
-                      <TableCell className="font-medium py-3 text-sm whitespace-nowrap">
-                        {item.certificationName}
-                      </TableCell>
-                      <TableCell className="py-3 text-sm whitespace-nowrap">
-                        {item.organizer}
-                      </TableCell>
-                      <TableCell className="py-3 text-sm" title={item.supportCriteria}>
-                        <div className="break-words max-w-[200px]">
-                          {item.supportCriteria}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right py-3 text-sm whitespace-nowrap">
-                        {(item.examFee ?? 0).toLocaleString()}원
-                      </TableCell>
-                      <TableCell className="text-right py-3 text-sm whitespace-nowrap">
-                        {item.examFeeUsd ? `$${(item.examFeeUsd).toLocaleString()}` : <span className="text-muted-foreground">-</span>}
-                      </TableCell>
-                      <TableCell className="text-right py-3 text-sm whitespace-nowrap">
-                        {(item.educationCost ?? 0).toLocaleString()}원
-                      </TableCell>
-                      <TableCell className="py-3 text-sm whitespace-nowrap">
-                        {item.supportTarget}
-                      </TableCell>
-                      <TableCell className="py-3 text-sm whitespace-nowrap">
-                        {item.effectiveStartDate}
-                      </TableCell>
-                      <TableCell className="py-3 text-sm whitespace-nowrap">
-                        {item.effectiveEndDate}
-                      </TableCell>
-                      <TableCell className="text-center py-3">
-                        <Switch
-                          checked={item.isActive}
-                          onCheckedChange={() => toggleActive(item.id)}
-                        />
-                      </TableCell>
-                      <TableCell className="py-3">
-                        <div className="flex justify-end gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8"
-                            onClick={() => openEditDialog(item)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => handleDelete(item.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-
-                    {filteredCriteria.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={11} className="h-32 text-center">
-                          <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                            <TableIcon className="h-10 w-10 opacity-30" />
-                            <p>{searchTerm ? '검색 결과가 없습니다' : '등록된 기준이 없습니다'}</p>
-                          </div>
-                        </TableCell>
+              <div className="rounded-lg border">
+                {/* 목록표 영역만 독립 스크롤(페이지 전체 스크롤 차단) */}
+                <div
+                  className="overflow-x-auto"
+                  style={{ scrollbarGutter: 'stable' }}
+                >
+                  <div
+                    className="overflow-y-scroll"
+                    style={{
+                      maxHeight: 'calc(100vh - 260px)', // 화면 높이에 따라 자동 조정
+                      scrollbarGutter: 'stable',
+                    }}
+                  >
+                    <Table className="min-w-[1400px]">
+                      <TableHeader className="sticky top-0 z-10 bg-background">
+                      <TableRow className="bg-muted/50">
+                        <TableHead className="min-w-[100px]">분야</TableHead>
+                        <TableHead className="min-w-[120px]">자격구분</TableHead>
+                        <TableHead className="min-w-[180px]">자격증명</TableHead>
+                        <TableHead className="min-w-[150px]">주관</TableHead>
+                        <TableHead className="min-w-[200px]">지원기준</TableHead>
+                        <TableHead className="text-right min-w-[100px]">응시료(원)</TableHead>
+                        <TableHead className="text-right min-w-[110px]">응시료(달러)</TableHead>
+                        <TableHead className="text-right min-w-[100px]">교육비(원)</TableHead>
+                        <TableHead className="min-w-[120px]">지원대상</TableHead>
+                        <TableHead className="min-w-[110px]">적용시작일</TableHead>
+                        <TableHead className="min-w-[110px]">적용종료일</TableHead>
+                        <TableHead className="text-center min-w-[80px]">활성</TableHead>
+                        <TableHead className="text-right min-w-[100px]">관리</TableHead>
                       </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredCriteria.map((item) => (
+                        <TableRow key={item.id} className={!item.isActive ? 'opacity-50' : ''}>
+                          <TableCell className="py-3">
+                            {item.category ? (
+                              <span className="px-3 py-1.5 rounded-full text-sm font-medium bg-primary/10 text-primary whitespace-nowrap">
+                                {item.category}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="py-3">
+                            <span className="px-2 py-1 rounded-full text-xs bg-secondary text-secondary-foreground whitespace-nowrap">
+                              {item.qualificationCategory}
+                            </span>
+                          </TableCell>
+                          <TableCell className="font-medium py-3 text-sm whitespace-nowrap">
+                            {item.certificationName}
+                          </TableCell>
+                          <TableCell className="py-3 text-sm whitespace-nowrap">
+                            {item.organizer}
+                          </TableCell>
+                          <TableCell className="py-3 text-sm" title={item.supportCriteria}>
+                            <div className="break-words max-w-[200px]">
+                              {item.supportCriteria}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right py-3 text-sm whitespace-nowrap">
+                            {(item.examFee ?? 0).toLocaleString()}원
+                          </TableCell>
+                          <TableCell className="text-right py-3 text-sm whitespace-nowrap">
+                            {item.examFeeUsd ? `$${(item.examFeeUsd).toLocaleString()}` : <span className="text-muted-foreground">-</span>}
+                          </TableCell>
+                          <TableCell className="text-right py-3 text-sm whitespace-nowrap">
+                            {(item.educationCost ?? 0).toLocaleString()}원
+                          </TableCell>
+                          <TableCell className="py-3 text-sm whitespace-nowrap">
+                            {item.supportTarget}
+                          </TableCell>
+                          <TableCell className="py-3 text-sm whitespace-nowrap">
+                            {item.effectiveStartDate}
+                          </TableCell>
+                          <TableCell className="py-3 text-sm whitespace-nowrap">
+                            {item.effectiveEndDate}
+                          </TableCell>
+                          <TableCell className="text-center py-3">
+                            <Switch
+                              checked={item.isActive}
+                              onCheckedChange={() => toggleActive(item.id)}
+                            />
+                          </TableCell>
+                          <TableCell className="py-3">
+                            <div className="flex justify-end gap-1">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8"
+                                onClick={() => openEditDialog(item)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-destructive hover:text-destructive"
+                                onClick={() => handleDelete(item.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+
+                        {filteredCriteria.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={11} className="h-32 text-center">
+                              <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                <TableIcon className="h-10 w-10 opacity-30" />
+                                <p>{searchTerm ? '검색 결과가 없습니다' : '등록된 기준이 없습니다'}</p>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>
