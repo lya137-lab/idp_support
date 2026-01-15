@@ -89,6 +89,9 @@ const defaultFormData: CriteriaFormData = {
 export default function SupportCriteriaPage() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // 가로 스크롤 동기화를 위한 ref
+  const tableScrollRef = useRef<HTMLDivElement>(null);
+  const fakeScrollRef = useRef<HTMLDivElement>(null);
   const [criteria, setCriteria] = useState<SupportCriteria[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -594,8 +597,8 @@ export default function SupportCriteriaPage() {
               </div>
             ) : (
               <div className="rounded-lg border">
-                {/* 가로 스크롤만 허용, 세로 스크롤 제거 */}
-                <div className="overflow-x-auto" style={{ scrollbarGutter: 'stable' }}>
+                {/* 표 컨테이너: 세로 스크롤 없음, 가로 스크롤을 별도 컨트롤로 분리 */}
+                <div ref={tableScrollRef} className="overflow-x-hidden">
                   <Table className="min-w-[1400px]">
                     <TableHeader className="bg-background">
                     <TableRow className="bg-muted/50">
@@ -701,6 +704,27 @@ export default function SupportCriteriaPage() {
                       )}
                     </TableBody>
                   </Table>
+                </div>
+
+                {/* 스티키 가로 스크롤 컨트롤러: viewport 하단에 고정 */}
+                <div
+                  ref={fakeScrollRef}
+                  className="sticky bottom-0 bg-background"
+                  style={{ overflowX: 'auto', scrollbarGutter: 'stable', height: '14px' }}
+                  onScroll={() => {
+                    if (tableScrollRef.current && fakeScrollRef.current) {
+                      tableScrollRef.current.scrollLeft = fakeScrollRef.current.scrollLeft;
+                    }
+                  }}
+                >
+                  <div
+                    style={{
+                      width: tableScrollRef.current?.scrollWidth
+                        ? `${tableScrollRef.current.scrollWidth}px`
+                        : '2000px',
+                      height: '1px',
+                    }}
+                  />
                 </div>
               </div>
             )}
