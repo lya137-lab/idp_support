@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { AlertCircle, User, Lock, Mail, Phone, Building, ArrowLeft } from 'lucide-react';
+import { AlertCircle, User, Lock, Mail, Building, ArrowLeft } from 'lucide-react';
 import mascotImage from '@/assets/mascot.png';
 import { Position } from '@/types';
 
@@ -33,6 +33,8 @@ const POSITIONS: Position[] = [
   'RM지점장',
 ];
 
+const COMPANY_EMAIL_DOMAIN = '@okfngroup.com';
+
 export default function Signup() {
   const navigate = useNavigate();
   const { signup } = useAuth();
@@ -45,7 +47,6 @@ export default function Signup() {
     rank: '',
     position: '' as Position | '',
     email: '',
-    phone: '',
     password: '',
     confirmPassword: '',
   });
@@ -60,6 +61,15 @@ export default function Signup() {
 
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // 사내 메일 도메인 강제 부여
+  const normalizeCompanyEmail = (value: string): string => {
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+    if (trimmed.toLowerCase().endsWith(COMPANY_EMAIL_DOMAIN)) return trimmed;
+    const local = trimmed.replace(/@.*/, '');
+    return `${local}${COMPANY_EMAIL_DOMAIN}`;
   };
 
   const validateForm = (): boolean => {
@@ -91,16 +101,9 @@ export default function Signup() {
       setError('이메일을 입력해주세요.');
       return false;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      setError('올바른 이메일 형식을 입력해주세요.');
-      return false;
-    }
-    if (!formData.phone.trim()) {
-      setError('연락처를 입력해주세요.');
-      return false;
-    }
-    if (!/^[0-9-]+$/.test(formData.phone.replace(/-/g, ''))) {
-      setError('올바른 연락처 형식을 입력해주세요.');
+    const normalizedEmail = normalizeCompanyEmail(formData.email);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setError('사내 이메일 형식을 확인해주세요.');
       return false;
     }
     if (!formData.password) {
@@ -129,6 +132,7 @@ export default function Signup() {
     setIsSubmitting(true);
 
     try {
+      const normalizedEmail = normalizeCompanyEmail(formData.email);
       const success = await signup({
         employeeId: formData.employeeId.trim(),
         name: formData.name.trim(),
@@ -136,8 +140,7 @@ export default function Signup() {
         department: formData.department.trim(),
         rank: formData.rank.trim(),
         position: formData.position as Position,
-        email: formData.email.trim(),
-        phone: formData.phone.trim(),
+        email: normalizedEmail,
         password: formData.password,
       });
 
@@ -332,31 +335,16 @@ export default function Signup() {
                           id="email"
                           name="email"
                           type="email"
-                          placeholder="example@okfngroup.com"
+                          placeholder="사내메일 계정 입력 (예: hong.gildong)"
                           value={formData.email}
                           onChange={handleInputChange}
                           className="pl-10"
                           required
                         />
                       </div>
-                    </div>
-
-                    {/* 연락처 */}
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">연락처 *</Label>
-                      <div className="relative">
-                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="phone"
-                          name="phone"
-                          type="tel"
-                          placeholder="010-1234-5678"
-                          value={formData.phone}
-                          onChange={handleInputChange}
-                          className="pl-10"
-                          required
-                        />
-                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        @okfngroup.com 도메인을 자동으로 적용합니다.
+                      </p>
                     </div>
                   </div>
 

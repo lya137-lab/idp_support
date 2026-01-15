@@ -36,36 +36,8 @@ export default function Reports() {
     { value: '12', label: '12월' },
   ];
 
-  // 샘플 승인 완료 데이터 (데모용)
-  const sampleApprovedData = useMemo(
-    () => [
-      {
-        employeeId: 'EMP001',
-        employeeName: '김철수',
-        department: '개발팀',
-        certificationName: 'AWS Solutions Architect',
-        acquisitionDate: `${selectedYear}-${selectedMonth}-05`,
-        educationCost: 200000,
-        examFee: 150000,
-        supportAmount: 262500,
-        status: 'approved',
-        approvedAt: `${selectedYear}-${selectedMonth}-10`,
-      },
-      {
-        employeeId: 'EMP002',
-        employeeName: '이영희',
-        department: '기획팀',
-        certificationName: 'PMP',
-        acquisitionDate: `${selectedYear}-${selectedMonth}-08`,
-        educationCost: 350000,
-        examFee: 150000,
-        supportAmount: 375000,
-        status: 'approved',
-        approvedAt: `${selectedYear}-${selectedMonth}-15`,
-      },
-    ],
-    [selectedYear, selectedMonth]
-  );
+  // 더미 승인 데이터 제거: 실제 조회 연동 전까지 빈 배열 사용
+  const sampleApprovedData = useMemo(() => [], [selectedYear, selectedMonth]);
 
   const triggerDownload = (filename: string, content: string, mime = 'text/plain', addBom = false) => {
     // 한글 깨짐 방지를 위해 UTF-8 BOM 추가 옵션

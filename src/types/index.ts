@@ -26,7 +26,7 @@ export interface User {
   rank: string; // 직급
   position: Position; // 직책
   email: string;
-  phone: string; // 연락처
+  phone?: string | null; // 연락처(신규 가입에서는 수집하지 않음)
   role: UserRole;
   password?: string; // 비밀번호 (저장 시 해시화 필요)
 }

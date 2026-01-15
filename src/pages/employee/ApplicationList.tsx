@@ -23,71 +23,8 @@ import {
 import { Plus, Search, Calendar, FileText, Eye, Edit, Trash2 } from 'lucide-react';
 import { CertificationApplication, ApplicationStatus } from '@/types';
 
-// 데모 데이터
-const mockApplications: CertificationApplication[] = [
-  {
-    id: '1',
-    userId: '1',
-    employeeId: 'EMP001',
-    employeeName: '김철수',
-    department: '개발팀',
-    certificationName: '정보처리기사',
-    acquisitionDate: '2024-01-15',
-    educationCost: 150000,
-    examFee: 30000,
-    supportAmount: 135000,
-    status: 'approved',
-    createdAt: '2024-01-20',
-    updatedAt: '2024-01-22',
-    files: [],
-  },
-  {
-    id: '2',
-    userId: '1',
-    employeeId: 'EMP001',
-    employeeName: '김철수',
-    department: '개발팀',
-    certificationName: 'AWS Solutions Architect',
-    acquisitionDate: '2024-02-10',
-    educationCost: 200000,
-    examFee: 150000,
-    status: 'pending',
-    createdAt: '2024-02-12',
-    updatedAt: '2024-02-12',
-    files: [],
-  },
-  {
-    id: '3',
-    userId: '1',
-    employeeId: 'EMP001',
-    employeeName: '김철수',
-    department: '개발팀',
-    certificationName: 'SQLD',
-    acquisitionDate: '2023-12-05',
-    educationCost: 80000,
-    examFee: 30000,
-    status: 'rejected',
-    createdAt: '2023-12-10',
-    updatedAt: '2023-12-12',
-    files: [],
-    rejectionReason: '지원 기준에 해당하지 않는 자격증입니다.',
-  },
-  {
-    id: '4',
-    userId: '1',
-    employeeId: 'EMP001',
-    employeeName: '김철수',
-    department: '개발팀',
-    certificationName: 'CPPG',
-    acquisitionDate: '2024-03-01',
-    educationCost: 0,
-    examFee: 50000,
-    status: 'pending',
-    createdAt: '2024-03-05',
-    updatedAt: '2024-03-05',
-    files: [],
-  },
-];
+// 더미 신청 데이터 제거: 실제 데이터 연동 전까지 빈 목록 유지
+const mockApplications: CertificationApplication[] = [];
 
 export default function ApplicationList() {
   const [searchTerm, setSearchTerm] = useState('');

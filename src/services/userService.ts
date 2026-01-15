@@ -13,7 +13,7 @@ export interface SupabaseUser {
   rank: string;
   position: Position;
   email: string;
-  phone: string;
+  phone?: string | null;
   role: UserRole;
   password_hash: string;
   created_at: string;
@@ -31,7 +31,7 @@ export interface CreateUserData {
   rank: string;
   position: Position;
   email: string;
-  phone: string;
+  phone?: string | null;
   role?: UserRole;
   password_hash: string;
 }
@@ -49,7 +49,7 @@ function mapSupabaseUserToUser(supabaseUser: SupabaseUser): User {
     rank: supabaseUser.rank,
     position: supabaseUser.position,
     email: supabaseUser.email,
-    phone: supabaseUser.phone,
+    phone: supabaseUser.phone ?? null,
     role: supabaseUser.role,
   };
 }
@@ -101,7 +101,7 @@ export async function getOrCreateCurrentUser(
             rank: defaultUserData.rank,
             position: defaultUserData.position,
             email: defaultUserData.email,
-            phone: defaultUserData.phone,
+            phone: defaultUserData.phone ?? null,
             role: defaultUserData.role || 'employee',
             password_hash: defaultUserData.password_hash || '', // 비밀번호 해시가 없으면 빈 문자열
           })

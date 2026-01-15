@@ -9,7 +9,6 @@ interface SignupData {
   rank: string;
   position: Position;
   email: string;
-  phone: string;
   password: string;
 }
 
@@ -31,6 +30,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// 사내 메일 도메인 강제
+const COMPANY_EMAIL_DOMAIN = '@okfngroup.com';
+const normalizeCompanyEmail = (email: string): string => {
+  const trimmed = email.trim();
+  if (trimmed.toLowerCase().endsWith(COMPANY_EMAIL_DOMAIN)) return trimmed;
+  const local = trimmed.replace(/@.*/, '');
+  return `${local}${COMPANY_EMAIL_DOMAIN}`;
+};
+
 // 데모용 사용자 데이터
 const DEMO_USERS: Record<string, { password: string; user: User }> = {
   'EMP001': {
@@ -44,7 +52,6 @@ const DEMO_USERS: Record<string, { password: string; user: User }> = {
       rank: '대리',
       position: '팀원',
       email: 'kim@okfngroup.com',
-      phone: '010-1234-5678',
       role: 'employee',
     },
   },
@@ -59,7 +66,6 @@ const DEMO_USERS: Record<string, { password: string; user: User }> = {
       rank: '차장',
       position: '팀장',
       email: 'admin@okfngroup.com',
-      phone: '010-2345-6789',
       role: 'admin',
     },
   },
@@ -74,7 +80,6 @@ const DEMO_USERS: Record<string, { password: string; user: User }> = {
       rank: '차장',
       position: '팀장',
       email: 'system@okfngroup.com',
-      phone: '010-3456-7890',
       role: 'system_admin',
     },
   },
@@ -168,6 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     try {
+      const normalizedEmail = normalizeCompanyEmail(data.email);
       // localStorage에서 기존 사용자 데이터 가져오기
       const usersData = localStorage.getItem('registered_users');
       const registeredUsers = usersData ? JSON.parse(usersData) : {};
@@ -187,8 +193,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         department: data.department,
         rank: data.rank,
         position: data.position,
-        email: data.email,
-        phone: data.phone,
+        email: normalizedEmail,
         role: 'employee', // 기본적으로 직원 권한
       };
       
