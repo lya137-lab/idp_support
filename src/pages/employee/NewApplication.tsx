@@ -22,6 +22,8 @@ import {
 import { cn } from '@/lib/utils';
 import { performOCR, OCRResult, performStructuredOCROnFiles, StructuredOCRResult } from '@/lib/ocr';
 import { getAllSupportCriteria } from '@/services/supportCriteriaService';
+import { createCertificationApplication } from '@/services/certificationApplicationService';
+import { useAuth } from '@/contexts/AuthContext';
 import { OCREditModal, OCREditData } from '@/components/OCREditModal';
 
 interface UploadedFile {
@@ -46,6 +48,7 @@ interface OCRExtractedData {
 export default function NewApplication() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   
   const [formData, setFormData] = useState({
     certificationName: '',
@@ -381,17 +384,73 @@ const [criteriaMap, setCriteriaMap] = useState<{ name: string; organizer: string
       return;
     }
 
+    if (!user) {
+      toast({
+        title: '로그인이 필요합니다',
+        description: '다시 로그인한 뒤 신청을 진행해주세요.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!formData.certificationName || !formData.acquisitionDate) {
+      toast({
+        title: '입력값 확인',
+        description: '자격증명과 취득일을 입력해주세요.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
-    // 제출 시뮬레이션
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    toast({
-      title: '신청 완료',
-      description: '자격증 취득 지원 신청이 접수되었습니다.',
-    });
-    
-    navigate('/applications');
+    try {
+      const payload = {
+        employee_id: user.employeeId,
+        employee_name: user.name,
+        company: user.company,
+        department: user.department,
+        certification_name: formData.certificationName,
+        acquisition_date: formData.acquisitionDate,
+        education_cost: Number(formData.educationCost || 0),
+        exam_fee: Number(formData.examFee || 0),
+        notes: formData.notes || undefined,
+        ocr_results: ocrData
+          ? {
+              rawText: ocrData.rawText,
+              extractedAmount: ocrData.extractedAmount
+                ? Number(ocrData.extractedAmount.replace(/,/g, ''))
+                : undefined,
+              extractedCertName: ocrData.extractedCertName || undefined,
+              extractedDate: ocrData.extractedDate || undefined,
+              confidence: ocrData.confidence,
+              isVerified: true,
+            }
+          : undefined,
+      };
+
+      const created = await createCertificationApplication(payload);
+
+      if (!created) {
+        throw new Error('신청 저장에 실패했습니다.');
+      }
+
+      toast({
+        title: '신청 완료',
+        description: '자격증 취득 지원 신청이 접수되었습니다.',
+      });
+      
+      navigate('/applications');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
+      toast({
+        title: '신청 실패',
+        description: message,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const renderStructuredOutput = () => {

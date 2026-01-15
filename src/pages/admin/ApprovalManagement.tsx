@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,13 +43,18 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { CertificationApplication, ApplicationStatus } from '@/types';
-
-// 더미 신청 데이터 제거: 실제 데이터 연동 전까지 빈 목록 유지
-const mockApplications: CertificationApplication[] = [];
+import { getAllCertificationApplications } from '@/services/certificationApplicationService';
 
 export default function ApprovalManagement() {
   const { toast } = useToast();
-  const [applications, setApplications] = useState(mockApplications);
+  const [applications, setApplications] = useState<CertificationApplication[]>([]);
+  useEffect(() => {
+    const load = async () => {
+      const data = await getAllCertificationApplications();
+      setApplications(data);
+    };
+    load();
+  }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | 'all'>('all');
   const [departmentFilter, setDepartmentFilter] = useState('all');

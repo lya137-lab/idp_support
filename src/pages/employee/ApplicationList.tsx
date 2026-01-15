@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -22,15 +22,25 @@ import {
 } from '@/components/ui/table';
 import { Plus, Search, Calendar, FileText, Eye, Edit, Trash2 } from 'lucide-react';
 import { CertificationApplication, ApplicationStatus } from '@/types';
-
-// 더미 신청 데이터 제거: 실제 데이터 연동 전까지 빈 목록 유지
-const mockApplications: CertificationApplication[] = [];
+import { getUserCertificationApplications } from '@/services/certificationApplicationService';
 
 export default function ApplicationList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | 'all'>('all');
+  const [applications, setApplications] = useState<CertificationApplication[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const filteredApplications = mockApplications.filter(app => {
+  useEffect(() => {
+    const load = async () => {
+      setIsLoading(true);
+      const data = await getUserCertificationApplications();
+      setApplications(data);
+      setIsLoading(false);
+    };
+    load();
+  }, []);
+
+  const filteredApplications = applications.filter(app => {
     const matchesSearch = app.certificationName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || app.status === statusFilter;
     return matchesSearch && matchesStatus;
@@ -96,82 +106,88 @@ export default function ApplicationList() {
           </CardHeader>
           <CardContent>
             <div className="rounded-lg border overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead>자격증명</TableHead>
-                    <TableHead>취득일</TableHead>
-                    <TableHead className="text-right">교육비</TableHead>
-                    <TableHead className="text-right">응시료</TableHead>
-                    <TableHead className="text-right">지원금액</TableHead>
-                    <TableHead>상태</TableHead>
-                    <TableHead className="text-right">관리</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredApplications.map((app) => (
-                    <TableRow key={app.id} className="group">
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-primary/5 group-hover:bg-primary/10 transition-colors">
-                            <FileText className="h-4 w-4 text-primary" />
+              {isLoading ? (
+                <div className="h-32 flex items-center justify-center text-muted-foreground text-sm">
+                  불러오는 중...
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50">
+                      <TableHead>자격증명</TableHead>
+                      <TableHead>취득일</TableHead>
+                      <TableHead className="text-right">교육비</TableHead>
+                      <TableHead className="text-right">응시료</TableHead>
+                      <TableHead className="text-right">지원금액</TableHead>
+                      <TableHead>상태</TableHead>
+                      <TableHead className="text-right">관리</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredApplications.map((app) => (
+                      <TableRow key={app.id} className="group">
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 rounded-lg bg-primary/5 group-hover:bg-primary/10 transition-colors">
+                              <FileText className="h-4 w-4 text-primary" />
+                            </div>
+                            <span className="font-medium">{app.certificationName}</span>
                           </div>
-                          <span className="font-medium">{app.certificationName}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5 text-muted-foreground">
-                          <Calendar className="h-3.5 w-3.5" />
-                          {app.acquisitionDate}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {app.educationCost.toLocaleString()}원
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {app.examFee.toLocaleString()}원
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {app.supportAmount 
-                          ? `${app.supportAmount.toLocaleString()}원`
-                          : '-'
-                        }
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status={app.status} />
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          {app.status === 'pending' && (
-                            <>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                            <Calendar className="h-3.5 w-3.5" />
+                            {app.acquisitionDate}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {app.educationCost.toLocaleString()}원
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {app.examFee.toLocaleString()}원
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {app.supportAmount 
+                            ? `${app.supportAmount.toLocaleString()}원`
+                            : '-'
+                          }
+                        </TableCell>
+                        <TableCell>
+                          <StatusBadge status={app.status} />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            {app.status === 'pending' && (
+                              <>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
 
-                  {filteredApplications.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={7} className="h-32 text-center">
-                        <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                          <FileText className="h-10 w-10 opacity-30" />
-                          <p>검색 결과가 없습니다</p>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                    {filteredApplications.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={7} className="h-32 text-center">
+                          <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                            <FileText className="h-10 w-10 opacity-30" />
+                            <p>검색 결과가 없습니다</p>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
             </div>
           </CardContent>
         </Card>
