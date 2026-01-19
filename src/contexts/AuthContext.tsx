@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User, UserRole, Position } from '@/types';
+import { supabase } from '@/lib/supabaseClient';
 
 interface SignupData {
   employeeId: string;
@@ -38,6 +39,27 @@ const normalizeCompanyEmail = (email: string): string => {
   const local = trimmed.replace(/@.*/, '');
   return `${local}${COMPANY_EMAIL_DOMAIN}`;
 };
+
+// Supabase auth.users에는 클라이언트가 직접 insert/upsert할 수 없음.
+// 앱에서 관리하는 사용자 리스트는 public.member_profiles 테이블에 보관한다.
+// auth 상태 변화 시 session.user가 존재할 때만 프로필을 upsert한다.
+async function upsertMemberProfile(sessionUser: any) {
+  if (!sessionUser) return;
+  const payload = {
+    id: sessionUser.id, // auth.uid
+    email: sessionUser.email ?? null,
+    name:
+      sessionUser.user_metadata?.full_name ??
+      sessionUser.user_metadata?.name ??
+      null,
+  };
+  const { error } = await supabase
+    .from('member_profiles')
+    .upsert(payload, { onConflict: 'id' });
+  if (error) {
+    console.error('member_profiles upsert 실패:', error);
+  }
+}
 
 // 데모용 사용자 데이터
 const DEMO_USERS: Record<string, { password: string; user: User }> = {
@@ -138,6 +160,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   }, []);
 
+  // auth 상태 변화 시 member_profiles에 프로필 upsert
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      async (_event, session) => {
+        // session?.user가 있을 때만 프로필 upsert
+        if (session?.user) {
+          await upsertMemberProfile(session.user);
+        }
+      }
+    );
+    return () => {
+      listener?.subscription.unsubscribe();
+    };
+  }, []);
+
   const login = async (employeeId: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     
@@ -197,14 +234,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: 'employee', // 기본적으로 직원 권한
       };
       
-      // 사용자 데이터 저장
+      // 사용자 데이터 저장 (로컬)
       registeredUsers[data.employeeId] = {
         password: data.password, // 실제 환경에서는 해시화 필요
         user: newUser,
       };
-      
       localStorage.setItem('registered_users', JSON.stringify(registeredUsers));
-      
+
       setIsLoading(false);
       return true;
     } catch (error) {

@@ -20,11 +20,13 @@ import {
   Edit2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { performOCR, OCRResult, performStructuredOCROnFiles, StructuredOCRResult } from '@/lib/ocr';
+import { performOCR, performStructuredOCROnFiles, StructuredOCRResult } from '@/lib/ocr';
 import { getAllSupportCriteria } from '@/services/supportCriteriaService';
 import { createCertificationApplication } from '@/services/certificationApplicationService';
+import { createMultipleApplicationFiles } from '@/services/applicationFileService';
 import { useAuth } from '@/contexts/AuthContext';
 import { OCREditModal, OCREditData } from '@/components/OCREditModal';
+import { supabase } from '@/lib/supabaseClient';
 
 interface UploadedFile {
   id: string;
@@ -69,6 +71,7 @@ const [structuredResult, setStructuredResult] = useState<StructuredOCRResult | n
 const [criteriaNames, setCriteriaNames] = useState<string[]>([]);
 const [matchedCertNames, setMatchedCertNames] = useState<string[]>([]);
 const [criteriaMap, setCriteriaMap] = useState<{ name: string; organizer: string }[]>([]);
+const STORAGE_BUCKET = 'application-files'; // Supabase Storage 버킷명
 
   // 날짜를 yyyy-mm-dd 형식으로 정규화
   const normalizeDateString = useCallback((value?: string) => {
@@ -201,6 +204,52 @@ const [criteriaMap, setCriteriaMap] = useState<{ name: string; organizer: string
 
     setFiles(prev => [...prev, ...newUploadedFiles]);
   };
+
+  /**
+   * 첨부파일을 Supabase Storage에 업로드하고 application_files 메타데이터를 저장
+   * - table/file 구조는 유지하면서 업로드 실패 시 상세 에러를 반환
+   */
+  const uploadAndSaveFiles = useCallback(async (applicationId: string) => {
+    // 인증 정보 확인
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+    if (authError || !authUser) {
+      throw new Error('인증된 사용자 정보를 확인할 수 없습니다.');
+    }
+
+    const storage = supabase.storage.from(STORAGE_BUCKET);
+
+    const uploads = await Promise.all(
+      files.map(async (f) => {
+        const safeName = f.file.name.replace(/\s+/g, '_');
+        const path = `${authUser.id}/${applicationId}/${Date.now()}-${Math.random().toString(36).slice(2)}-${safeName}`;
+
+        const { error: uploadError } = await storage.upload(path, f.file, { upsert: true });
+        if (uploadError) {
+          throw new Error(`파일 업로드 실패: ${f.file.name} (${uploadError.message})`);
+        }
+
+        const { data: publicUrlData } = storage.getPublicUrl(path);
+        const publicUrl = publicUrlData?.publicUrl;
+        if (!publicUrl) {
+          throw new Error(`파일 URL 생성 실패: ${f.file.name}`);
+        }
+
+        return {
+          application_id: applicationId,
+          name: f.file.name,
+          type: f.type,
+          url: publicUrl,
+          size: f.file.size,
+        };
+      })
+    );
+
+    // 메타데이터 저장
+    const saved = await createMultipleApplicationFiles(uploads);
+    if (saved.length !== uploads.length) {
+      throw new Error('일부 파일 정보 저장에 실패했습니다.');
+    }
+  }, [files]);
 
   // 업로드 완료 후 사용자가 명시적으로 OCR 실행을 눌렀을 때 처리
   const handleRunOCROnAll = async () => {
@@ -417,6 +466,7 @@ const [criteriaMap, setCriteriaMap] = useState<{ name: string; organizer: string
         notes: formData.notes || undefined,
         ocr_results: ocrData
           ? {
+              documentType: ocrData.documentType || 'OTHER',
               rawText: ocrData.rawText,
               extractedAmount: ocrData.extractedAmount
                 ? Number(ocrData.extractedAmount.replace(/,/g, ''))
@@ -434,6 +484,9 @@ const [criteriaMap, setCriteriaMap] = useState<{ name: string; organizer: string
       if (!created) {
         throw new Error('신청 저장에 실패했습니다.');
       }
+
+      // 첨부파일 업로드 및 메타데이터 저장
+      await uploadAndSaveFiles(created.id);
 
       toast({
         title: '신청 완료',
