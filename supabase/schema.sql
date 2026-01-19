@@ -227,6 +227,22 @@ CREATE POLICY "Users can view own application files" ON application_files
     )
   );
 
+-- 신청 파일 업로드(메타데이터 insert) 허용: 본인 신청 또는 관리자
+CREATE POLICY "Users can insert own application files" ON application_files
+  FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM certification_applications
+      WHERE id = application_id
+      AND user_id::text = auth.uid()::text
+    )
+    OR EXISTS (
+      SELECT 1 FROM users
+      WHERE id::text = auth.uid()::text
+      AND role IN ('admin', 'system_admin')
+    )
+  );
+
 -- 지원 기준표는 모든 인증된 사용자가 조회 가능
 ALTER TABLE support_criteria ENABLE ROW LEVEL SECURITY;
 

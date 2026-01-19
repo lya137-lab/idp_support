@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
@@ -105,10 +105,16 @@ const STORAGE_BUCKET = 'application-files'; // Supabase Storage 버킷명
   }, []);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>, type: 'receipt' | 'certificate') => {
-    if (e.target.files) {
-      const selectedFiles = Array.from(e.target.files);
-      processFiles(selectedFiles, type);
+    if (!e.target.files || e.target.files.length === 0) {
+      toast({
+        title: '선택된 파일이 없습니다',
+        description: '브라우저가 파일 선택을 차단하지 않았는지 확인해주세요.',
+        variant: 'destructive',
+      });
+      return;
     }
+    const selectedFiles = Array.from(e.target.files);
+    processFiles(selectedFiles, type);
   };
 
   // Supabase 기준표 자격증명 로드
@@ -614,6 +620,7 @@ const STORAGE_BUCKET = 'application-files'; // Supabase Storage 버킷명
   };
 
   const FileDropZone = ({ type, label }: { type: 'receipt' | 'certificate'; label: string }) => {
+    const inputRef = useRef<HTMLInputElement | null>(null); // 클릭으로 강제 열기용 ref
     const typeFiles = files.filter(f => f.type === type);
 
     return (
@@ -622,6 +629,15 @@ const STORAGE_BUCKET = 'application-files'; // Supabase Storage 버킷명
         <div
           onDrop={(e) => handleFileDrop(e, type)}
           onDragOver={(e) => e.preventDefault()}
+          onClick={() => inputRef.current?.click()} // 드롭존 클릭 시에도 파일 선택 강제 실행
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              inputRef.current?.click();
+            }
+          }}
+          role="button"
+          tabIndex={0}
           className={cn(
             'relative border-2 border-dashed rounded-lg p-6 transition-colors',
             'hover:border-primary/50 hover:bg-primary/5',
@@ -633,7 +649,12 @@ const STORAGE_BUCKET = 'application-files'; // Supabase Storage 버킷명
             multiple
             accept=".jpg,.jpeg,.png,.pdf,.tif,.tiff"
             onChange={(e) => handleFileSelect(e, type)}
-            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            onClick={(e) => {
+              // 같은 파일을 다시 선택해도 onChange가 동작하도록 값 초기화
+              (e.currentTarget as HTMLInputElement).value = '';
+            }}
+            ref={inputRef}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-50 pointer-events-auto"
           />
           <div className="text-center">
             <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
@@ -644,6 +665,16 @@ const STORAGE_BUCKET = 'application-files'; // Supabase Storage 버킷명
               JPG, PNG, PDF, TIF (최대 10MB)
             </p>
           </div>
+        </div>
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => inputRef.current?.click()}
+          >
+            파일 선택
+          </Button>
         </div>
 
         {/* 업로드된 파일 목록 */}
